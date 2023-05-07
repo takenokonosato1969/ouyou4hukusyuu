@@ -1,10 +1,13 @@
 <div class = "container row justify-content-center">
+  <!--検索機能-->
   <%= render "searches/search", model: @model, content: @content,  method: @method %>
 </div>
 <div class="container px-5 px-sm-0">
+  <%= render 'layouts/errors', obj: @book %>
   <div class="row">
     <div class="col-md-3">
       <h2>User info</h2>
+      <!--一覧画面ではログインユーザーの情報表示-->
       <%= render 'info', user: current_user %>
 
       <h2 class="mt-3">New book</h2>
