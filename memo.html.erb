@@ -1,0 +1,184 @@
+応用5～～
+
+下記のコードの比較、違いを教えてください
+1
+  resources :books
+  get "search" => "searches#search"
+
+2
+ resources :users, only: [:index,:show,:edit,:update]
+  get '/search', to: 'searches#search'
+end
+
+resources :booksの後に、get "search" => "searches#search"が定義されています。これは、booksリソースに対して/searchのGETリクエストが送られた場合に、searchesコントローラーのsearchアクションを呼び出すという意味です。
+
+resources :usersの後に、get '/search', to: 'searches#search'が定義されています。これは、usersリソースに対して/searchのGETリクエストが送られた場合に、searchesコントローラーのsearchアクションを呼び出すという意味です。
+
+違いは以下の通りです。
+
+get "search" => "searches#search"は、Rails 3の古いルーティングの書き方であり、Rails 4以降のバージョンでは非推奨となっています。
+
+get '/search', to: 'searches#search'は、Rails 4以降のバージョンで推奨されているルーティングの書き方です。to:オプションを使用して、コントローラーとアクションを指定する形式となっています。
+
+どちらの方法を選択しても基本的には同じ結果が得られますが、Railsのバージョンによって推奨される書き方が異なるため、最新のバージョンの文法に従ってルーティングを定義することが推奨されます。また、Railsのバージョンをアップグレードする際には、ルーティングの書き方に注意して変更を加える必要があります。
+
+1
+class SearchesController < ApplicationController
+  before_action :authenticate_user!
+
+  def search
+    @range = params[:range]
+    @word = params[:word]
+
+    if @range == "User"
+      @users = User.looks(params[:search], params[:word])
+      render "search_result"
+    else
+      @books = Book.looks(params[:search], params[:word])
+      render "search_result"
+    end
+  end
+end
+
+2
+class SearchesController < ApplicationController
+  before_action :authenticate_user!
+
+	def search
+		@model = params[:model]
+		@content = params[:content]
+		@method = params[:method]
+		if @model == 'user'
+			@records = User.search_for(@content, @method)
+		else
+			@records = Book.search_for(@content, @method)
+		end
+	end
+end
+
+1と2のコードは、RailsのコントローラーであるSearchesControllerのsearchアクションを定義していますが、コードの内容やロジックに違いがあります。
+
+@rangeと@wordを使って、params[:range]とparams[:word]の値を取得しています。そして、@rangeの値によって、@usersまたは@booksを設定し、"search_result"というテンプレートをレンダリングしています。また、before_actionでauthenticate_user!メソッドを呼び出しています。
+
+@model、@content、@methodを使って、params[:model]、params[:content]、params[:method]の値を取得しています。そして、@modelの値によって、@recordsを設定し、特定のモデルのsearch_forメソッドを呼び出しています。before_actionでauthenticate_user!メソッドは呼び出されていません。
+
+違いは以下の通りです。
+
+@rangeと@wordを使った検索条件の取得と、UserとBookモデルのlooksメソッドの呼び出しを行っています。
+
+@model、@content、@methodを使った検索条件の取得と、UserとBookモデルのsearch_forメソッドの呼び出しを行っています。
+
+また、before_actionでのauthenticate_user!メソッドの呼び出しも、1と2で異なっています。これは、ユーザーの認証を行うためのDeviseなどのgemを使用している場合に依存します。コードの全体の文脈や要件に合わせて、適切な認証方法を選択する必要があります。
+
+
+
+1
+  def self.looks(search, word)
+    if search == "perfect_match"
+      @user = User.where("name LIKE?", "#{word}")
+    elsif search == "forward_match"
+      @user = User.where("name LIKE?","#{word}%")
+    elsif search == "backward_match"
+      @user = User.where("name LIKE?","%#{word}")
+    elsif search == "partial_match"
+      @user = User.where("name LIKE?","%#{word}%")
+    else
+      @user = User.all
+    end
+  end
+
+2
+  def self.search_for(content, method)
+    if method == 'perfect'
+      User.where(name: content)
+    elsif method == 'forward'
+      User.where('name LIKE ?', content + '%')
+    elsif method == 'backward'
+      User.where('name LIKE ?', '%' + content)
+    else
+      User.where('name LIKE ?', '%' + content + '%')
+    end
+  end
+
+
+1と2のコードは、Ruby on RailsのモデルであるUserモデルのクラスメソッドとして、検索条件に基づいてユーザーを検索するためのロジックを定義していますが、コードの内容やロジックに違いがあります。
+
+searchとwordを引数として受け取り、searchの値によって、nameカラムの完全一致、前方一致、後方一致、部分一致、または全てのユーザーを取得しています。LIKE演算子を使用し、?をプレースホルダとして、wordの値をSQLクエリに埋め込んでいます。
+
+contentとmethodを引数として受け取り、methodの値によって、nameカラムの完全一致、前方一致、後方一致、部分一致を行っています。WHERE句にLIKE演算子を使用し、?をプレースホルダとして、contentの値をSQLクエリに埋め込んでいます。
+
+違いは以下の通りです。
+
+searchとwordを使った検索条件の取得と、nameカラムのLIKE演算子を使った条件式の組み立てを行っています。
+
+contentとmethodを使った検索条件の取得と、nameカラムのLIKE演算子を使った条件式の組み立てを行っています。
+
+また、条件式の組み立ての方法やプレースホルダの使い方が異なっていますが、これは使用しているデータベースの種類やORMの仕様によるものです。使用しているデータベースやORMの仕様に合った方法を選択する必要があります。
+
+
+1
+<% if user_signed_in? %>
+  <div class="search_form">
+    <%= form_with url: search_path, local: true, method: :get do |f| %>
+      <%= f.text_field :word %>
+      <%= f.select :range, options_for_select([["User"],["Book"]]) %>
+      <%= f.select :search, options_for_select([["完全一致","perfect_match"], ["前方一致","forward_match"], ["後方一致","backward_match"], ["部分一致","partial_match"]]) %>
+      <%= f.submit "検索", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+<% end %>
+
+2
+<% if user_signed_in? %>
+  <%= form_with url: search_path, method: :get, local: true do |f| %>
+    <%= f.text_field :content %>
+    <%= f.select :model, options_for_select({ "User" => "user", "Book" => "book" }) %>
+    <%= f.select :method, options_for_select({ "完全一致" => "perfect", "前方一致" => "forward", "後方一致" => "backward", "部分一致" => "partial" }) %>
+    <%= f.submit '検索' %>
+  <% end %>
+<% end %>
+
+フォームの各フィールドの命名が異なります。f.text_field :word は1つ目のコードで使用されており、f.text_field :content は2つ目のコードで使用されています。同様に、f.select :range は1つ目のコードで使用されており、f.select :model は2つ目のコードで使用されています。これにより、フォームの送信されるパラメータ名が異なることになります。
+
+options_for_select の使用方法が異なります。1つ目のコードでは、配列の形式でオプションを指定していますが、2つ目のコードではハッシュの形式でオプションを指定しています。
+
+f.submit メソッドの引数が異なります。1つ目のコードでは、ボタンの表示名を "検索" としていますが、2つ目のコードでは、ボタンの表示名を "検索" としています。
+
+また、共通して以下の点があります。
+
+user_signed_in? メソッドを使って、ユーザーがログインしているかどうかを判定しています。
+form_with ヘルパーを使って、フォームを生成しています。
+url や method などのオプションを使って、フォームの送信先や HTTP メソッドを指定しています。
+フォーム内のフィールドには、f.text_field や f.select メソッドを使って、フォームの入力フィールドを生成しています。
+options_for_select ヘルパーを使って、選択肢を生成しています。1つ目のコードでは配列の形式、2つ目のコードではハッシュの形式で選択肢を指定しています。
+
+
+1
+  <% if @range == "User" %>
+    <h2>Users search for <%= @word %></h2>
+    <%= render 'users/index',users: @users %>
+  <% else %>
+      <h2>Users search for <%= @word %></h2>
+      <%= render 'books/index',books: @books %>
+  <% end %>
+
+2
+<% if @model == 'user' %>
+	<h3>Users search for "<%= @content %>"</h3>
+  <%= render 'users/index', users: @records %>
+<% elsif @model == 'book' %>
+	<h3>Books search for "<%= @content %>"</h3>
+  <%= render 'books/index', books: @records %>
+<% end %>
+
+変数の命名が異なります。1つ目のコードでは、@range と @word というインスタンス変数が使用されており、@users と @books というインスタンス変数がそれぞれ users と books ビューに渡されています。一方、2つ目のコードでは、@model と @content というインスタンス変数が使用されており、@records というインスタンス変数が users と books ビューに渡されています。
+
+条件の書き方が異なります。1つ目のコードでは、@range が "User" であるかどうかをチェックしていますが、2つ目のコードでは、@model が "user" であるかどうかをチェックしています。また、1つ目のコードでは、else ブロックがありますが、2つ目のコードでは、elsif ブロックを使用しています。
+
+表示されるメッセージの文言が異なります。1つ目のコードでは、<h2>Users search for <%= @word %></h2> という形式で、@range と @word を表示していますが、2つ目のコードでは、<h3>Users search for "<%= @content %>"</h3> という形式で、@model と @content を表示しています。また、@word と @content の前にダブルクォーテーションがついている点も異なります。
+
+また、共通して以下の点があります。
+
+条件分岐を使って、条件に応じて異なるビューをレンダリングしています。
+@range や @model などのインスタンス変数を使って、条件を判定しています。
+render メソッドを使って、他のビューをレンダリングしています。引数にビューファイルのパスや変数を渡して、ビューを表示しています。

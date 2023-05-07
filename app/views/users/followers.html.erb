@@ -1,4 +1,5 @@
 <table class='table'>
+  <% if @users.present? %>
       <thead>
         <tr>
           <th>Image</th>
@@ -29,4 +30,9 @@
           </tr>
         <% end %>
         </tbody>
-    </table> 
+  <% else %>
+    <tr>
+      <th>フォロワーはいません</th>
+    </tr>
+  <% end %>
+</table> 

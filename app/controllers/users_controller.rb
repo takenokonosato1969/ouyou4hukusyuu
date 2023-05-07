@@ -30,14 +30,14 @@ class UsersController < ApplicationController
 
   def follows
     user = User.find(params[:id])
-    # @users = user.following_user.page(params[:page]).per(3).reverse_order
-    @users = user.following_user.all
+    @users = user.following_user.page(params[:page]).per(3).reverse_order
+    # @users = user.following_user.all
   end
 
   def followers
     user = User.find(params[:id])
-    # @users = user.follower_user.page(params[:page]).per(3).reverse_order
-    @users = user.follower_user.all
+    @users = user.follower_user.page(params[:page]).per(3).reverse_order
+    # @users = user.follower_user.all
   end
 
   private
