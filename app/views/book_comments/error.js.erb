@@ -1,2 +1,2 @@
-$(".comment_error").prepend("<%= j(render "layouts/errors", obj: @book_comment) %>");
+$(".comment_error").html("<%= j(render "layouts/errors", obj: @book_comment) %>");
 console.log("エラー");
