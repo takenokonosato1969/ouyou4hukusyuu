@@ -17,6 +17,10 @@ Rails.application.routes.draw do
   #   memberオプション
   # resources以外の自分で定義したアクションへのルーティングを設定する場合に使用する。
   get 'searches/search', to: 'searches#search'
+  
+  devise_scope :user do
+    post "users/guest_sign_in", to: "users/sessions#guest_sign_in"
+  end
     
 
 end

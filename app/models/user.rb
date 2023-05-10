@@ -41,9 +41,7 @@ class User < ApplicationRecord
     following_user.include?(user)
   end
   
-  # 検索分岐のコード
-  # 文字検索をしたい時はLIKE句を使用する
-  # %はワイルドカード
+
   def self.search_for(content,method)
     if method == "perfect"
         User.where(name: content)
@@ -55,4 +53,6 @@ class User < ApplicationRecord
         User.where("name LIKE ?", "%" + content + "%")
     end
   end
+  
+  
 end
